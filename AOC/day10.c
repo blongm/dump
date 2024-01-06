@@ -87,16 +87,18 @@ int main(int argc, char** argv)
     if (adjacent_tiles[NORTH] != NULL && (*adjacent_tiles[NORTH] == '7' ||  *adjacent_tiles[NORTH] == '|' || *adjacent_tiles[NORTH] == 'F'))
     {
         facing_direction = NORTH;
-    }
-        
-    else if (adjacent_tiles[EAST] != NULL && (*adjacent_tiles[EAST] == 'J' ||  *adjacent_tiles[EAST] == '-' || *adjacent_tiles[EAST] == '7'))
-    {
-        facing_direction = EAST;
+        *current_position = ':';
     }
 
     else if (adjacent_tiles[SOUTH] != NULL && (*adjacent_tiles[SOUTH] == 'L' ||  *adjacent_tiles[SOUTH] == '|' || *adjacent_tiles[SOUTH] == 'J'))
     {
         facing_direction = SOUTH;
+        *current_position = ':';
+    }
+        
+    else if (adjacent_tiles[EAST] != NULL && (*adjacent_tiles[EAST] == 'J' ||  *adjacent_tiles[EAST] == '-' || *adjacent_tiles[EAST] == '7'))
+    {
+        facing_direction = EAST;
     }
 
     else if (adjacent_tiles[WEST] != NULL && (*adjacent_tiles[WEST] == 'F' ||  *adjacent_tiles[WEST] == '-' || *adjacent_tiles[WEST] == 'L'))
@@ -108,7 +110,7 @@ int main(int argc, char** argv)
 
     int steps_taken = 1;
 
-    while (*current_position != 'S')
+    while (!(*current_position == 'S' || *current_position == ':'))
     {
 
         switch (facing_direction)
@@ -144,17 +146,51 @@ int main(int argc, char** argv)
 
         free(adjacent_tiles);
         adjacent_tiles = find_adjacent_tiles(Map, current_position);
-        *current_position = 'S';
+        if (*current_position == 'J' || *current_position == 'L')  
+            *current_position = '|';
         current_position = adjacent_tiles[facing_direction];
         steps_taken++;
         
     }
 
+    free(adjacent_tiles);
+
+
     printf("Steps Taken - %d\n", steps_taken / 2);
 
-    for
 
-    free(adjacent_tiles);
+    // Even - odd rule
+    // https://en.wikipedia.org/wiki/Even%E2%80%93odd_rule
+
+    int number_of_inside_tiles = 0;
+
+    for (size_t i = 0; i < file_size; i++)
+    {        
+        if (file_buffer[i] == '.')
+        {
+            file_buffer[i] = 'O';
+
+            for (int j = i - 1; j > 0 && !iscntrl(file_buffer[j]); j--)
+            {
+                if (file_buffer[j] == '|' || (file_buffer[j] == 'S' && memcmp(&file_buffer[j - 1], "-S-", 3) != 0))
+                {
+                    // Uses an XOR gate to flip O into an I and vice versa
+                    // O =      0100 1111
+                    // I =      0100 1001
+                    // Mask =   0000 0110   = 0x6
+
+                    file_buffer[i] ^= 0x06;
+                }
+
+            }
+
+            if (file_buffer[i] == 'I') number_of_inside_tiles++;
+            
+        }
+        
+    }
+    
+    printf("Number of Inside Tiles - %d", number_of_inside_tiles);
 
     return 0;
 }
