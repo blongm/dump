@@ -65,35 +65,44 @@ int main(int argc, char** argv)
     Map.x = strspn((char*)file_buffer, "|-LJ7F.S") + 2;
     Map.y = 1;
 
-    unsigned char* current_position;
+    unsigned char* current_position = NULL;
+
+    unsigned char* file_buffer_stripped = malloc(file_size);
 
     for (size_t i = 0; i < file_size; i++)
     {
         if (iscntrl(file_buffer[i]))
         {
+            file_buffer_stripped[i] = file_buffer[i];
+            file_buffer_stripped[i + 1] = file_buffer[i + 1];
             Map.y++;
             i++;
         }
         else if (file_buffer[i] == 'S')
         {
+            file_buffer_stripped[i] = file_buffer[i];
             current_position = &file_buffer[i];
         }
+        else
+        {
+            file_buffer_stripped[i] = '.';
+        }
+
     }
 
-    direction facing_direction;
+    direction facing_direction = 0;
     unsigned char** adjacent_tiles = find_adjacent_tiles(Map, current_position);
     
     
     if (adjacent_tiles[NORTH] != NULL && (*adjacent_tiles[NORTH] == '7' ||  *adjacent_tiles[NORTH] == '|' || *adjacent_tiles[NORTH] == 'F'))
     {
         facing_direction = NORTH;
-        *current_position = ':';
+        file_buffer_stripped[current_position - file_buffer] = '|';
     }
 
     else if (adjacent_tiles[SOUTH] != NULL && (*adjacent_tiles[SOUTH] == 'L' ||  *adjacent_tiles[SOUTH] == '|' || *adjacent_tiles[SOUTH] == 'J'))
     {
         facing_direction = SOUTH;
-        *current_position = ':';
     }
         
     else if (adjacent_tiles[EAST] != NULL && (*adjacent_tiles[EAST] == 'J' ||  *adjacent_tiles[EAST] == '-' || *adjacent_tiles[EAST] == '7'))
@@ -110,7 +119,7 @@ int main(int argc, char** argv)
 
     int steps_taken = 1;
 
-    while (!(*current_position == 'S' || *current_position == ':'))
+    while (!(*current_position == 'S'))
     {
 
         switch (facing_direction)
@@ -146,15 +155,20 @@ int main(int argc, char** argv)
 
         free(adjacent_tiles);
         adjacent_tiles = find_adjacent_tiles(Map, current_position);
+
         if (*current_position == 'J' || *current_position == 'L')  
-            *current_position = '|';
+            file_buffer_stripped[current_position - file_buffer] = '|';
+        else 
+            file_buffer_stripped[current_position - file_buffer] = *current_position;
+
         current_position = adjacent_tiles[facing_direction];
+
         steps_taken++;
         
     }
 
     free(adjacent_tiles);
-
+    free(file_buffer);
 
     printf("Steps Taken - %d\n", steps_taken / 2);
 
@@ -166,30 +180,32 @@ int main(int argc, char** argv)
 
     for (size_t i = 0; i < file_size; i++)
     {        
-        if (file_buffer[i] == '.')
+        if (file_buffer_stripped[i] == '.')
         {
-            file_buffer[i] = 'O';
+            file_buffer_stripped[i] = 'O';
 
-            for (int j = i - 1; j > 0 && !iscntrl(file_buffer[j]); j--)
+            for (int j = i - 1; j > 0 && !iscntrl(file_buffer_stripped[j]); j--)
             {
-                if (file_buffer[j] == '|' || (file_buffer[j] == 'S' && memcmp(&file_buffer[j - 1], "-S-", 3) != 0))
+                if (file_buffer_stripped[j] == '|')
                 {
                     // Uses an XOR gate to flip O into an I and vice versa
                     // O =      0100 1111
                     // I =      0100 1001
                     // Mask =   0000 0110   = 0x6
 
-                    file_buffer[i] ^= 0x06;
+                    file_buffer_stripped[i] ^= 0x06;
                 }
 
             }
 
-            if (file_buffer[i] == 'I') number_of_inside_tiles++;
+            if (file_buffer_stripped[i] == 'I') number_of_inside_tiles++;
+
             
         }
         
     }
     
+    printf("%s\n", file_buffer_stripped);
     printf("Number of Inside Tiles - %d", number_of_inside_tiles);
 
     return 0;
