@@ -9,26 +9,31 @@ unsigned char* file_buffer;
 
 typedef struct group
 {
-    int group_size;
+    unsigned int group_size;
     unsigned char* group_location;
 
 } group;
 
 typedef struct spring
 {
-    int length_of_row;
+    size_t length_of_row;
     unsigned char* row;
-    int number_of_contiguous_groups;
+
+    unsigned int number_of_contiguous_groups;
     group* contiguous_groups;
+
     int number_of_unknown_locations;
     unsigned char** unknown_locations;
+
+    int number_of_known_operational_locations;
+
     int arrangements;
 
-    int length_of_row_unfolded;
+    size_t length_of_row_unfolded;
     unsigned char* row_unfolded;
-    int number_of_unknown_locations_unfolded;
-    unsigned char** unknown_locations_unfolded;
-    int arrangements_unfolded;
+    
+    int total_of_group_sizes;
+    
 
 } spring;
 
@@ -46,60 +51,106 @@ void load_file_into_memory(char* file_name)
 
 bool validate_groups(spring* spring)
 {
-    int number_of_contiguous_groups = 0;
-    group* contiguous_groups = NULL;
-    group* current_group = NULL;
+    unsigned int number_of_contiguous_groups = 0;
+    unsigned int* contiguous_groups = malloc(spring -> number_of_contiguous_groups * sizeof(unsigned int));
 
+    // Calcualte grouping for this arrangement
     for (size_t i = strspn((char*)spring -> row, "."); spring -> row[i] == '#' || spring -> row[i] == '.'; i++)
     {
+        // Detected start of grouping
         if (spring -> row[i] == '#')
         {
+            // Update list of groups
             number_of_contiguous_groups++;
-            contiguous_groups = realloc(contiguous_groups, number_of_contiguous_groups * sizeof(group));
-            current_group = &contiguous_groups[number_of_contiguous_groups - 1];
-            current_group -> group_location = &spring -> row[i];
-            current_group -> group_size = strspn((char*)&spring -> row[i], "#");
-            i += current_group -> group_size;
+
+            // We can exit early here!
+            // if we havent got too many groups
+            if (number_of_contiguous_groups > spring -> number_of_contiguous_groups)
+            {
+                free(contiguous_groups);
+                return false;
+            }
+
+            //  Update group
+            contiguous_groups[number_of_contiguous_groups - 1] = strspn((char*)&spring -> row[i], "#");
+            i += contiguous_groups[number_of_contiguous_groups - 1];
+
+            // If groups we have so far match
+            for (unsigned int i = 0; i < number_of_contiguous_groups; i++)
+            {
+                if (contiguous_groups[i] != spring -> contiguous_groups[i].group_size)
+                {
+                    free(contiguous_groups);
+                    return false;
+                }
+            }
+    
         }
     }
     
+    // First check if amount of groups is good
     if (number_of_contiguous_groups != spring -> number_of_contiguous_groups)
     {
         free(contiguous_groups);
         return false;
     }
-    for (int i = 0; i < number_of_contiguous_groups; i++)
+
+    // Then check if they match
+    for (unsigned int i = 0; i < number_of_contiguous_groups; i++)
     {
-        if (contiguous_groups[i].group_size != spring -> contiguous_groups[i].group_size)
+        if (contiguous_groups[i] != spring -> contiguous_groups[i].group_size)
         {
             free(contiguous_groups);
             return false;
         }
     }
     
+    // Validation passes so we return true;
     free(contiguous_groups);
     return true;
     
 } 
 
 void next_permutation(char* permutation, int length_of_permutation)
-{
-    if (length_of_permutation == 0)
+{   
+    int x = 1;
+
+    if (permutation[length_of_permutation - 1] == '#')
     {
-        return;
-    }
-    
-    if (permutation[0] == '.')
-    {
-        permutation[0] = '#';
+        for (size_t i = length_of_permutation - 1; ; i--)
+        {
+            if (permutation[i - 1] == '.' && permutation[i - 2] == '#')
+            {
+                permutation[i - 1] = '#';
+                permutation[i - 2] = '.'; 
+
+                memset(&permutation[i], '.', length_of_permutation - i);
+                memset(&permutation[i], '#', x);
+
+                return;
+
+            }
+            else if (permutation[i - 1] == '#')
+            {
+                x++;
+            }
+        }
     }
     else
     {
-        permutation[0] = '.';
-        next_permutation(&permutation[1], length_of_permutation - 1);
+        for (size_t i = length_of_permutation - 1; ; i--)
+        {
+            if (permutation[i - 1] == '#')
+            {
+                permutation[i - 1] = '.';
+                permutation[i] = '#';
+            
+                return;
+            }
+        }
     }
-    
 }
+
 
 int main(int argc, char** argv)
 {   
@@ -137,35 +188,8 @@ int main(int argc, char** argv)
             i += strspn((char*)&file_buffer[i], "1234567890") + 1;
         }
     }
-
-    /*
-    for (int i = 0; i < number_of_springs; i++)
-    {
-        // First character of row
-        current_group = &springs[i].contiguous_groups[0];
-
-        if (current_group -> group_location == NULL && springs[i].row[0] == '#')
-        {
-            memset(&springs[i].row[0], '#', current_group -> group_size);
-            springs[i].row[current_group -> group_size] = '.';
-            current_group -> group_location = springs[i].row;
-        }
-
-        // Last character of row
-        current_group = &springs[i].contiguous_groups[springs[i].number_of_contiguous_groups - 1];
-
-        if (current_group -> group_location == NULL && springs[i].row[springs[i].length_of_row - 1] == '#')
-        {
-            springs[i].row[springs[i].length_of_row - current_group -> group_size - 1] = '.';
-            memset(&springs[i].row[springs[i].length_of_row - current_group -> group_size], '#', current_group -> group_size);
-        }
-        
-        // Further optimisations?
-        
-    }
-    */
    
-   char* current_permuation = NULL;
+   char* current_permutation = NULL;
    char* last_permutation = NULL;
    
 
@@ -175,9 +199,11 @@ int main(int argc, char** argv)
    {
         springs[i].number_of_unknown_locations = 0;
         springs[i].unknown_locations = NULL;
+        springs[i].number_of_known_operational_locations = 0;
+        springs[i].total_of_group_sizes  = 0;
 
         // Find out where every unknown location is
-        for (int j = 0; j < springs[i].length_of_row; j++)
+        for (size_t j = 0; j < springs[i].length_of_row; j++)
         {
             if (springs[i].row[j] == '?')
             {
@@ -185,27 +211,35 @@ int main(int argc, char** argv)
                 springs[i].unknown_locations = realloc(springs[i].unknown_locations, springs[i].number_of_unknown_locations * sizeof(unsigned char*));
                 springs[i].unknown_locations[springs[i].number_of_unknown_locations - 1] = &springs[i].row[j];
             }   
+
+            else if (springs[i].row[j] == '#')
+            {
+                springs[i].number_of_known_operational_locations++;
+            }
         }    
 
-        current_permuation = realloc(current_permuation, springs[i].number_of_unknown_locations);
-        memset(current_permuation, '.', springs[i].number_of_unknown_locations);
+        for (unsigned int j = 0; j < springs[i].number_of_contiguous_groups; j++)
+        {
+            springs[i].total_of_group_sizes += springs[i].contiguous_groups[j].group_size;
+        }
+        
+
+        current_permutation = realloc(current_permutation, springs[i].number_of_unknown_locations);
+        memset(current_permutation, '.', springs[i].number_of_unknown_locations);
+        memset(current_permutation, '#', springs[i].total_of_group_sizes - springs[i].number_of_known_operational_locations);
 
         last_permutation = realloc(last_permutation, springs[i].number_of_unknown_locations);
         memset(last_permutation, '#', springs[i].number_of_unknown_locations);
+        memset(last_permutation, '.', springs[i].number_of_unknown_locations - (springs[i].total_of_group_sizes - springs[i].number_of_known_operational_locations));
 
-
-        for (int j = 0; j < springs[i].number_of_unknown_locations; j++)
-        {
-            *springs[i].unknown_locations[j] = current_permuation[j];
-        }
 
         springs[i].arrangements = 0;
 
-        while (memcmp(current_permuation, last_permutation, springs[i].number_of_unknown_locations) != 0)
+        while (memcmp(current_permutation, last_permutation, springs[i].number_of_unknown_locations) != 0)
         {
             for (int j = 0; j < springs[i].number_of_unknown_locations; j++)
             {
-                *springs[i].unknown_locations[j] = current_permuation[j];
+                *springs[i].unknown_locations[j] = current_permutation[j];
             }
             
 
@@ -214,12 +248,12 @@ int main(int argc, char** argv)
                 springs[i].arrangements++;
             }
 
-            next_permutation(current_permuation, springs[i].number_of_unknown_locations);
+            next_permutation(current_permutation, springs[i].number_of_unknown_locations);
         }
 
         for (int j = 0; j < springs[i].number_of_unknown_locations; j++)
         {
-            *springs[i].unknown_locations[j] = current_permuation[j];
+            *springs[i].unknown_locations[j] = current_permutation[j];
         }
             
         if (validate_groups(&springs[i]))
@@ -231,14 +265,227 @@ int main(int argc, char** argv)
 
     }
 
-    free(current_permuation);
+    printf("Sum of counts = %d\n", sum);
+
+    // Unfolded
+    free(current_permutation);
     free(last_permutation);
-   
+
+    
+    current_permutation = NULL;
+    last_permutation = NULL;
+    
+    sum = 0;
+
+    for (int i = 0; i < number_of_springs; i++)
+   {
+
+        springs[i].length_of_row_unfolded = ((springs[i].length_of_row + 1) * 5) - 1;
+        springs[i].row_unfolded = malloc(springs[i].length_of_row_unfolded );
+
+        // Resest Changed data back to '?'
+        for (int j = 0; j < springs[i].number_of_unknown_locations; j++)
+        {
+            *springs[i].unknown_locations[j] = '?';
+        }
+
+        springs[i].number_of_unknown_locations = 0;
+        
+
+        for (size_t j = 0; j < springs[i].length_of_row_unfolded; j += springs[i].length_of_row + 1)
+        {
+            memcpy(&springs[i].row_unfolded[j], springs[i].row, springs[i].length_of_row);
+        }
+        for (size_t j = 1; j < 5; j++)
+        {
+            springs[i].row_unfolded[j * springs[i].length_of_row + j - 1] = '?';
+        }
+        
+        springs[i].row = springs[i].row_unfolded;
+        
+
+        // Repeat Groups
+        springs[i].contiguous_groups = realloc(springs[i].contiguous_groups, springs[i].number_of_contiguous_groups * 5 * sizeof(group));
+
+        
+        for (unsigned int j = 0; j < springs[i].number_of_contiguous_groups * 5; j++)
+        {
+            springs[i].contiguous_groups[j].group_location = NULL;
+            springs[i].contiguous_groups[j].group_size = springs[i].contiguous_groups[j % springs[i].number_of_contiguous_groups].group_size;
+        }
+        
+
+        // Solve the nonogram
+        // First character of row
+        current_group = &springs[i].contiguous_groups[0];
+
+        if (current_group -> group_location == NULL && springs[i].row[0] == '#')
+        {
+            memset(&springs[i].row[0], '#', current_group -> group_size);
+            springs[i].row[current_group -> group_size] = '.';
+            current_group -> group_location = springs[i].row;
+        }
+
+        // extend first # found
+        for (size_t j = 0; j <= current_group -> group_size ; j++)
+        {
+            if (springs[i].row[j] == '#')
+            {
+                memset (&springs[i].row[j], '#', current_group -> group_size - j);
+            }
+        }
+        
+
+        // Last character of row
+        current_group = &springs[i].contiguous_groups[springs[i].number_of_contiguous_groups - 1];
+
+        if (current_group -> group_location == NULL && springs[i].row[springs[i].length_of_row_unfolded - 1] == '#')
+        {
+            springs[i].row[springs[i].length_of_row_unfolded - current_group -> group_size - 1] = '.';
+            memset(&springs[i].row[springs[i].length_of_row_unfolded - current_group -> group_size], '#', current_group -> group_size);
+        }
+
+        
+        // extend last # found
+        for (size_t j = 0; j <= current_group -> group_size ; j++)
+        {
+            if (springs[i].row[current_group -> group_size - j - 1] == '#')
+            {
+                memset(&springs[i].row[springs[i].length_of_row_unfolded - (current_group -> group_size - j) - 1], '#', current_group -> group_size - j);
+            }
+        }
+        
+        current_group = &springs[i].contiguous_groups[0];
+
+        // ?# 1,   =   .#
+        if (current_group -> group_location == NULL && springs[i].contiguous_groups[0].group_size == 1 && memcmp(springs[i].row, "?#", 2) == 0)
+        {
+            memcpy(springs[i].row, ".#", 2);
+            current_group -> group_location = &springs[i].row[1];
+            
+        }
+        
+        // ?#? ,1,  ==  .#.
+        for (unsigned int j = 0; j < springs[i].number_of_contiguous_groups; j++)
+        {
+            current_group = &springs[i].contiguous_groups[j];
+
+            if (current_group -> group_location != NULL  && current_group -> group_size == 1)
+            {
+                memcpy(&current_group -> group_location[-1], ".#.", 3);
+            }
+        }
+        
+        /*
+        for(int j = 0; &springs[i].row[j] < strpbrk(springs[i].row, "?"); j++)
+        {
+            if (springs[i].row[j] == '#')
+            {
+                
+            }
+            
+        }
+        */
+
+        // Find out where every unknown location is
+        springs[i].unknown_locations = NULL;
+
+        for (size_t j = 0; j < springs[i].length_of_row_unfolded; j++)
+        {
+            if (springs[i].row[j] == '?')
+            {
+                springs[i].number_of_unknown_locations++;
+                springs[i].unknown_locations = realloc(springs[i].unknown_locations, springs[i].number_of_unknown_locations * sizeof(unsigned char*));
+                springs[i].unknown_locations[springs[i].number_of_unknown_locations - 1] = &springs[i].row[j];
+            }   
+        }    
+        
+        
+        springs[i].arrangements = 0;
+
+        
+        springs[i].contiguous_groups = realloc(springs[i].contiguous_groups, 5 * springs[i].number_of_contiguous_groups * sizeof(group));
+        
+        for (unsigned int j = springs[i].number_of_contiguous_groups; j < 5 * springs[i].number_of_contiguous_groups; j++)
+        {
+            springs[i].contiguous_groups[j] = springs[i].contiguous_groups[j % springs[i].number_of_contiguous_groups];
+        }
+        
+        springs[i].number_of_contiguous_groups *= 5;
+
+        springs[i].total_of_group_sizes  = 0;
+
+        for (unsigned int j = 0; j < springs[i].number_of_contiguous_groups; j++)
+        {
+            springs[i].total_of_group_sizes += springs[i].contiguous_groups[j].group_size;
+        }
+        
+        springs[i].number_of_known_operational_locations = 0;
+
+        for (size_t j = 0; j < springs[i].length_of_row_unfolded; j++)
+        {
+            if (springs[i].row[j] == '#')
+            {
+                springs[i].number_of_known_operational_locations++;
+            }
+            
+        }
+
+        
+        current_permutation = realloc(current_permutation, springs[i].number_of_unknown_locations);
+        memset(current_permutation, '.', springs[i].number_of_unknown_locations);
+        memset(current_permutation, '#', springs[i].total_of_group_sizes - springs[i].number_of_known_operational_locations);
+
+        last_permutation = realloc(last_permutation, springs[i].number_of_unknown_locations);
+        memset(last_permutation, '#', springs[i].number_of_unknown_locations);
+        memset(last_permutation, '.', springs[i].number_of_unknown_locations - (springs[i].total_of_group_sizes - springs[i].number_of_known_operational_locations));
+
+
+        // Repeat until reached last permutation
+        while (memcmp(current_permutation, last_permutation, springs[i].number_of_unknown_locations) != 0)
+        {
+            // Update data with current permutation
+            for (int j = 0; j < springs[i].number_of_unknown_locations; j++)
+            {
+                *springs[i].unknown_locations[j] = current_permutation[j];
+            }
+            
+            // Check if current permutation matches the groups
+            if (validate_groups(&springs[i]))
+            {
+                springs[i].arrangements++;
+            }
+
+            // Calcualte next permutation
+            next_permutation(current_permutation, springs[i].number_of_unknown_locations);
+
+            //printf("%s\n", current_permutation);
+        }
+
+        for (int j = 0; j < springs[i].number_of_unknown_locations; j++)
+        {
+            *springs[i].unknown_locations[j] = current_permutation[j];
+        }
+            
+        if (validate_groups(&springs[i]))
+        {
+            springs[i].arrangements++;
+        }      
+        
+        sum += springs[i].arrangements;
+
+        printf("Lines done: %d\n", i);
+        
+
+    }
+
+    
 
     for (int i = 0; i < number_of_springs; i++)
     {
         free(springs[i].contiguous_groups);
         free(springs[i].unknown_locations);
+        free(springs[i].row);
         
     }
     
@@ -246,8 +493,8 @@ int main(int argc, char** argv)
 
     free(file_buffer);
 
-    printf("Sum of counts = %d\n", sum);
-
+    
+    printf("Sum of counts when unfolded = %d\n", sum);
 
     return 0;
 }
