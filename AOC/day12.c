@@ -345,7 +345,6 @@ int main(int argc, char** argv)
             memset(&springs[i].row[springs[i].length_of_row_unfolded - current_group -> group_size], '#', current_group -> group_size);
         }
 
-        
         // extend last # found
         for (size_t j = 0; j <= current_group -> group_size ; j++)
         {
