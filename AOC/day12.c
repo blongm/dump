@@ -33,6 +33,8 @@ typedef struct spring
     unsigned char* row_unfolded;
     
     int total_of_group_sizes;
+
+    unsigned int max_group_size;
     
 
 } spring;
@@ -172,6 +174,7 @@ int main(int argc, char** argv)
         current_spring -> row = &file_buffer[i];
         current_spring -> number_of_contiguous_groups = 0;
         current_spring -> contiguous_groups = NULL;
+        current_spring -> max_group_size = 0;
 
         i += current_spring -> length_of_row + 1;
 
@@ -184,6 +187,10 @@ int main(int argc, char** argv)
 
             current_group -> group_size = atoi((char*)&file_buffer[i]);
             current_group -> group_location = NULL;
+            if (current_group -> group_size > current_spring -> max_group_size)
+            {
+                current_spring -> max_group_size = current_group -> group_size;
+            }
             
             i += strspn((char*)&file_buffer[i], "1234567890") + 1;
         }
@@ -279,6 +286,7 @@ int main(int argc, char** argv)
 
     for (int i = 0; i < number_of_springs; i++)
    {
+        printf("Lines %d\n", i + 1);
 
         springs[i].length_of_row_unfolded = ((springs[i].length_of_row + 1) * 5) - 1;
         springs[i].row_unfolded = malloc(springs[i].length_of_row_unfolded );
@@ -346,9 +354,9 @@ int main(int argc, char** argv)
         }
 
         // extend last # found
-        for (size_t j = 0; j <= current_group -> group_size ; j++)
+        for (size_t j = 1; j <= current_group -> group_size ; j++)
         {
-            if (springs[i].row[current_group -> group_size - j - 1] == '#')
+            if (springs[i].row[springs[i].length_of_row_unfolded - j] == '#')
             {
                 memset(&springs[i].row[springs[i].length_of_row_unfolded - (current_group -> group_size - j) - 1], '#', current_group -> group_size - j);
             }
@@ -375,16 +383,47 @@ int main(int argc, char** argv)
             }
         }
         
-        /*
-        for(int j = 0; &springs[i].row[j] < strpbrk(springs[i].row, "?"); j++)
+        //  .#????  3   =   ..###.?
+        for(size_t j = 0; &springs[i].row[j] < (unsigned char*)strpbrk((char*)springs[i].row, "?"); j++)
         {
             if (springs[i].row[j] == '#')
             {
-                
+                for (unsigned int k = 0; k < springs[i].number_of_contiguous_groups; k++)
+                {
+                    current_group = &springs[i].contiguous_groups[k];
+
+                    if (current_group -> group_location == NULL)
+                    {
+                        current_group -> group_location = &springs[i].row[j];
+                        memset(current_group -> group_location, '#', current_group -> group_size);
+                        springs[i].row[j + current_group -> group_size] = '.';
+                        j += current_group -> group_size;
+                        break;
+                    }
+                    else if (current_group -> group_location == &springs[i].row[j])
+                    {
+                        j += current_group -> group_size;
+                        break;
+                    }
+                }
             }
-            
         }
-        */
+
+        for (size_t j = 0; j < springs[i].length_of_row_unfolded; j++)
+        {
+            if (springs[i].row[j] == '#')
+            {
+                if (strspn((char*)&springs[i].row[j], "#") == springs[i].max_group_size)
+                {
+                    springs[i].row[j + springs[i].max_group_size] = '.';
+                    springs[i].row[j - 1] = '.';
+                }
+                
+                j += strspn((char*)&springs[i].row[j], "#");
+            }
+        }
+        
+        
 
         // Find out where every unknown location is
         springs[i].unknown_locations = NULL;
@@ -439,6 +478,7 @@ int main(int argc, char** argv)
         memset(last_permutation, '#', springs[i].number_of_unknown_locations);
         memset(last_permutation, '.', springs[i].number_of_unknown_locations - (springs[i].total_of_group_sizes - springs[i].number_of_known_operational_locations));
 
+        printf("%s\n", springs[i].row_unfolded);
 
         // Repeat until reached last permutation
         while (memcmp(current_permutation, last_permutation, springs[i].number_of_unknown_locations) != 0)
@@ -473,7 +513,6 @@ int main(int argc, char** argv)
         
         sum += springs[i].arrangements;
 
-        printf("Lines done: %d\n", i);
         
 
     }

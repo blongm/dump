@@ -3,15 +3,16 @@ Flat profile:
 Each sample counts as 0.01 seconds.
   %   cumulative   self              self     total           
  time   seconds   seconds    calls  ns/call  ns/call  name    
- 36.95      0.75     0.75                             main
- 20.20      1.16     0.41 77558768     5.29     5.29  next_permutation
- 19.21      1.55     0.39 77558770     5.03     5.03  validate_groups
- 13.30      1.82     0.27                             _mcount_private
-  8.37      1.99     0.17                             __fentry__
-  0.99      2.01     0.02                             memcmp
-  0.49      2.02     0.01                             free
-  0.49      2.03     0.01                             strspn
-  0.00      2.03     0.00        1     0.00     0.00  load_file_into_memory
+ 34.68     11.42    11.42 818809270    13.95    13.95  validate_groups
+ 31.58     21.82    10.40                             main
+ 13.51     26.27     4.45 818809268     5.43     5.43  next_permutation
+ 10.54     29.74     3.47                             _mcount_private
+  6.35     31.83     2.09                             __fentry__
+  2.46     32.64     0.81                             strspn
+  0.36     32.76     0.12                             memcmp
+  0.30     32.86     0.10                             malloc
+  0.21     32.93     0.07                             free
+  0.00     32.93     0.00        1     0.00     0.00  load_file_into_memory
 
  %         the percentage of the total running time of the
 time       program used by this function.
@@ -49,38 +50,41 @@ notice and this notice are preserved.
 		     Call graph (explanation follows)
 
 
-granularity: each sample hit covers 4 byte(s) for 0.49% of 2.03 seconds
+granularity: each sample hit covers 4 byte(s) for 0.03% of 32.93 seconds
 
 index % time    self  children    called     name
                                                  <spontaneous>
-[1]     76.4    0.75    0.80                 main [1]
-                0.41    0.00 77558768/77558768     next_permutation [2]
-                0.39    0.00 77558770/77558770     validate_groups [3]
-                0.00    0.00       1/1           load_file_into_memory [9]
+[1]     79.8   10.40   15.87                 main [1]
+               11.42    0.00 818809270/818809270     validate_groups [2]
+                4.45    0.00 818809268/818809268     next_permutation [3]
+                0.00    0.00       1/1           load_file_into_memory [10]
 -----------------------------------------------
-                0.41    0.00 77558768/77558768     main [1]
-[2]     20.2    0.41    0.00 77558768         next_permutation [2]
+               11.42    0.00 818809270/818809270     main [1]
+[2]     34.7   11.42    0.00 818809270         validate_groups [2]
 -----------------------------------------------
-                0.39    0.00 77558770/77558770     main [1]
-[3]     19.2    0.39    0.00 77558770         validate_groups [3]
------------------------------------------------
-                                                 <spontaneous>
-[4]     13.3    0.27    0.00                 _mcount_private [4]
+                4.45    0.00 818809268/818809268     main [1]
+[3]     13.5    4.45    0.00 818809268         next_permutation [3]
 -----------------------------------------------
                                                  <spontaneous>
-[5]      8.4    0.17    0.00                 __fentry__ [5]
+[4]     10.5    3.47    0.00                 _mcount_private [4]
 -----------------------------------------------
                                                  <spontaneous>
-[6]      1.0    0.02    0.00                 memcmp [6]
+[5]      6.3    2.09    0.00                 __fentry__ [5]
 -----------------------------------------------
                                                  <spontaneous>
-[7]      0.5    0.01    0.00                 free [7]
+[6]      2.5    0.81    0.00                 strspn [6]
 -----------------------------------------------
                                                  <spontaneous>
-[8]      0.5    0.01    0.00                 strspn [8]
+[7]      0.4    0.12    0.00                 memcmp [7]
+-----------------------------------------------
+                                                 <spontaneous>
+[8]      0.3    0.10    0.00                 malloc [8]
+-----------------------------------------------
+                                                 <spontaneous>
+[9]      0.2    0.07    0.00                 free [9]
 -----------------------------------------------
                 0.00    0.00       1/1           main [1]
-[9]      0.0    0.00    0.00       1         load_file_into_memory [9]
+[10]     0.0    0.00    0.00       1         load_file_into_memory [10]
 -----------------------------------------------
 
  This table describes the call tree of the program, and was sorted by
@@ -173,6 +177,7 @@ notice and this notice are preserved.
 
 Index by function name
 
-   [5] __fentry__              [9] load_file_into_memory   [2] next_permutation
-   [4] _mcount_private         [1] main                    [8] strspn
-   [7] free                    [6] memcmp                  [3] validate_groups
+   [5] __fentry__              [1] main                    [6] strspn
+   [4] _mcount_private         [8] malloc                  [2] validate_groups
+   [9] free                    [7] memcmp
+  [10] load_file_into_memory   [3] next_permutation
