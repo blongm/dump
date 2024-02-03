@@ -233,7 +233,7 @@ int main(int argc, char** argv)
    for (int i = 0; i < number_of_springs; i++)
    {
         printf("Current Spring: %d\n", i + 1);
-        printf("Length: %lld\n", springs[i].length_of_row);
+        //printf("Length: %lld\n", springs[i].length_of_row);
 
         springs[i].number_of_unknown_locations = 0;
         springs[i].unknown_locations = NULL;
@@ -289,19 +289,23 @@ int main(int argc, char** argv)
         }
 
 
-        current_permutation = realloc(current_permutation, springs[i].number_of_unknown_locations + springs[i].number_of_known_operational_locations);
+        current_permutation = realloc(current_permutation, springs[i].number_of_unknown_locations + springs[i].number_of_known_operational_locations + 1);
         memset(current_permutation, '.', springs[i].number_of_unknown_locations + springs[i].number_of_known_operational_locations);
         memset(current_permutation, '#', springs[i].total_of_group_sizes);
 
-        last_permutation = realloc(last_permutation, springs[i].number_of_unknown_locations + springs[i].number_of_known_operational_locations);
+        last_permutation = realloc(last_permutation, springs[i].number_of_unknown_locations + springs[i].number_of_known_operational_locations + 1);
         memset(last_permutation, '#', springs[i].number_of_unknown_locations + springs[i].number_of_known_operational_locations);
         memset(last_permutation, '.', springs[i].number_of_unknown_locations + springs[i].number_of_known_operational_locations - (springs[i].total_of_group_sizes));
+
+        // I LOVE NULL-TERMINATED STRINGS!
+        current_permutation[springs[i].number_of_unknown_locations + springs[i].number_of_known_operational_locations] = '\0';
+        last_permutation[springs[i].number_of_unknown_locations + springs[i].number_of_known_operational_locations] = '\0';
 
         springs[i].arrangements = 0;
 
         while (memcmp(current_permutation, last_permutation, springs[i].number_of_unknown_locations) != 0)
         {
-            printf("Current Permutation: %s\n", current_permutation);
+            //printf("Current Permutation: %s\n", current_permutation);
 
             for (int j = 0; j < springs[i].number_of_known_operational_and_unknown_locations; j++)
             {
@@ -311,7 +315,7 @@ int main(int argc, char** argv)
 
             if (validate_groups(&springs[i]))
             {
-                printf("Valid row: %s\n", springs[i].row);
+                //printf("Valid row: %.25s\n", springs[i].row);
                 springs[i].arrangements++;
             }
 
@@ -334,10 +338,12 @@ int main(int argc, char** argv)
         }      
 
         sum += springs[i].arrangements;
+        printf("Count = %d\n", springs[i].arrangements);
 
         // Set last allocation to 0 so no previous # got left behind
         memset(current_permutation, 0, springs[i].number_of_unknown_locations + springs[i].number_of_known_operational_locations);
         memset(last_permutation, 0, springs[i].number_of_unknown_locations + springs[i].number_of_known_operational_locations);
+        
 
     }
 
@@ -364,6 +370,12 @@ int main(int argc, char** argv)
         for (int j = 0; j < springs[i].number_of_unknown_locations; j++)
         {
             *springs[i].unknown_locations[j] = '?';
+        }
+
+        // Resest Changed data back to '#'
+        for (unsigned int j = 0; j < springs[i].number_of_known_operational_locations; j++)
+        {
+            *springs[i].known_operational_locations[j] = '#';
         }
 
         springs[i].number_of_unknown_locations = 0;
