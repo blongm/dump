@@ -65,6 +65,30 @@ bool validate_groups(spring* spring)
     unsigned int number_of_contiguous_groups = 0;
     unsigned int* contiguous_groups = malloc(spring -> number_of_contiguous_groups * sizeof(unsigned int));
 
+    // Check  if operational groups aren't matching
+    // But try and move blocks to the end
+    for (size_t i = 0; i < spring -> number_of_known_operational_locations; i++)
+    {
+        if (*spring->known_operational_locations[i] != '#')
+        {
+            int number_of_known_operational_locations_to_be_moved = 0;
+
+            for (unsigned char* j = spring -> known_operational_locations[i]; *j == '#' || *j == '.'; j++)
+            {
+                if (*j == '#')
+                {
+                    number_of_known_operational_locations_to_be_moved++;
+                }
+            }
+
+            for (int j = i + 1; j < spring -> number_of_known_operational_and_unknown_locations; j++)
+                current_permutation[j] = j >= spring -> number_of_known_operational_and_unknown_locations - number_of_known_operational_locations_to_be_moved ? '#' : '.';
+                
+            return false;
+        }
+        
+    }
+
     // Calcualte grouping for this arrangement
     for (size_t i = strspn((char*)spring -> row, "."); spring -> row[i] == '#' || spring -> row[i] == '.'; i++)
     {
@@ -106,29 +130,7 @@ bool validate_groups(spring* spring)
         return false;
     }
 
-    // Check  if operational groups aren't matching
-    // But try and move blocks to the end
-    for (size_t i = 0; i < spring -> number_of_known_operational_locations; i++)
-    {
-        if (*spring->known_operational_locations[i] != '#')
-        {
-            int number_of_known_operational_locations_to_be_moved = 0;
 
-            for (unsigned char* j = spring -> known_operational_locations[i]; *j == '#' || *j == '.'; j++)
-            {
-                if (*j == '#')
-                {
-                    number_of_known_operational_locations_to_be_moved++;
-                }
-            }
-
-            for (int j = i + 1; j < spring -> number_of_known_operational_and_unknown_locations; j++)
-                current_permutation[j] = j >= spring -> number_of_known_operational_and_unknown_locations - number_of_known_operational_locations_to_be_moved ? '#' : '.';
-                
-            return false;
-        }
-        
-    }
 
     // Then check if they match
     for (unsigned int i = 0; i < number_of_contiguous_groups; i++)
@@ -596,7 +598,7 @@ int main(int argc, char** argv)
         // Repeat until reached last permutation
         while (memcmp(current_permutation, last_permutation, springs[i].number_of_unknown_locations) != 0)
         {
-            printf("Current Permutation: %s\n", current_permutation);
+            //printf("Current Permutation: %s\n", current_permutation);
 
             // Update data with current permutation
             for (int j = 0; j < springs[i].number_of_known_operational_and_unknown_locations; j++)
