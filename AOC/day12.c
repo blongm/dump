@@ -61,10 +61,7 @@ void load_file_into_memory(char* file_name)
 bool validate_groups(spring* spring)
 {
 
-
-    unsigned int number_of_contiguous_groups = 0;
-    unsigned int* contiguous_groups = malloc(spring -> number_of_contiguous_groups * sizeof(unsigned int));
-
+    // Priorotise exiting here as we can skip large chunks
     // Check  if operational groups aren't matching
     // But try and move blocks to the end
     for (size_t i = 0; i < spring -> number_of_known_operational_locations; i++)
@@ -89,6 +86,9 @@ bool validate_groups(spring* spring)
         
     }
 
+    unsigned int number_of_contiguous_groups = 0;
+    unsigned int* contiguous_groups = malloc(spring -> number_of_contiguous_groups * sizeof(unsigned int));
+    
     // Calcualte grouping for this arrangement
     for (size_t i = strspn((char*)spring -> row, "."); spring -> row[i] == '#' || spring -> row[i] == '.'; i++)
     {
@@ -98,38 +98,21 @@ bool validate_groups(spring* spring)
             // Update list of groups
             number_of_contiguous_groups++;
 
-            // We can exit early here!
-            // if we havent got too many groups
-            if (number_of_contiguous_groups > spring -> number_of_contiguous_groups)
-            {
-                free(contiguous_groups);
-                return false;
-            }
-
             //  Update group
             contiguous_groups[number_of_contiguous_groups - 1] = strspn((char*)&spring -> row[i], "#");
             i += contiguous_groups[number_of_contiguous_groups - 1];
-
-            // If groups we have so far match
-            for (unsigned int j = 0; j < number_of_contiguous_groups; j++)
-            {
-                if (contiguous_groups[j] != spring -> contiguous_groups[j].group_size)
-                {
-                    free(contiguous_groups);
-                    return false;
-                }
-            }
     
         }
     }
-    
-    // First check if amount of groups is good
+
+
+
+      // First check if amount of groups is good
     if (number_of_contiguous_groups != spring -> number_of_contiguous_groups)
     {
         free(contiguous_groups);
         return false;
     }
-
 
 
     // Then check if they match
@@ -331,7 +314,7 @@ int main(int argc, char** argv)
         while (memcmp(current_permutation, last_permutation, springs[i].number_of_unknown_locations) != 0)
         {
 
-            //printf("Current Permutation: %s\n", current_permutation);
+            printf("Current Permutation: %s\n", current_permutation);
 
             for (int j = 0; j < springs[i].number_of_known_operational_and_unknown_locations; j++)
             {
@@ -598,7 +581,7 @@ int main(int argc, char** argv)
         // Repeat until reached last permutation
         while (memcmp(current_permutation, last_permutation, springs[i].number_of_unknown_locations) != 0)
         {
-            //printf("Current Permutation: %s\n", current_permutation);
+            printf("Current Permutation: %s\n", current_permutation);
 
             // Update data with current permutation
             for (int j = 0; j < springs[i].number_of_known_operational_and_unknown_locations; j++)
