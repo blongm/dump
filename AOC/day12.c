@@ -79,7 +79,7 @@ bool validate_groups(spring* spring)
             }
         
             for (unsigned char* j = spring -> known_operational_locations[i]; *j == '#' || *j == '.'; j++)
-                current_permutation[j] = j >= spring -> number_of_known_operational_and_unknown_locations - number_of_known_operational_locations_to_be_moved ? '#' : '.';
+                *j = spring->number_of_known_operational_and_unknown_locations + 
                 
             return false;
         }
