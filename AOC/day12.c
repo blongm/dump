@@ -78,6 +78,9 @@ bool validate_groups(spring* spring)
                 }
             }
 
+            memset(spring->known_operational_locations[i], '.', spring -> number_of_known_operational_and_unknown_locations - i);
+            memset(spring->known_operational_locations[i], '.', spring -> number_of_known_operational_and_unknown_locations - i);
+
             for (int j = i + 1; j < spring -> number_of_known_operational_and_unknown_locations; j++)
                 current_permutation[j] = j >= spring -> number_of_known_operational_and_unknown_locations - number_of_known_operational_locations_to_be_moved ? '#' : '.';
                 
