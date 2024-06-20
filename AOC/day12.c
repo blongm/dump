@@ -78,8 +78,8 @@ bool validate_groups(spring* spring)
                 }
             }
         
-            for (unsigned char* j = spring -> known_operational_locations[i]; *j == '#' || *j == '.'; j++)
-                *j = spring->number_of_known_operational_and_unknown_locations + 
+            for (size_t j = i; spring -> known_operational_locations[j] == '#' || spring -> known_operational_locations[j] == '.'; j++)
+                spring -> known_operational_locations[j] = j > spring -> known_operational_and_unknown_locations[spring -> number_of_known_operational_and_unknown_locations] - number_of_known_operational_locations_to_be_moved ? '#' : '.';
                 
             return false;
         }
@@ -110,7 +110,7 @@ bool validate_groups(spring* spring)
       // First check if amount of groups is good
     if (number_of_contiguous_groups != spring -> number_of_contiguous_groups)
     {
-        free(contiguous_groups);
+//        free(contiguous_groups);
         return false;
     }
 
