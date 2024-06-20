@@ -20,8 +20,8 @@ typedef struct group
 typedef struct spring
 {
     size_t length_of_row;
-    unsigned char* row;
 
+    unsigned char* row;
     unsigned int number_of_contiguous_groups;
     group* contiguous_groups;
 
@@ -68,22 +68,28 @@ bool validate_groups(spring* spring)
     {
         if (*spring->known_operational_locations[i] != '#')
         {
-            int number_of_known_operational_locations_to_be_moved = 0;
+            int number_of_operational_locations_to_be_moved = 0;
 
             for (unsigned char* j = spring -> known_operational_locations[i]; *j == '#' || *j == '.'; j++)
             {
                 if (*j == '#')
                 {
-                    number_of_known_operational_locations_to_be_moved++;
+                    number_of_operational_locations_to_be_moved++;
                 }
             }
         
-            for (size_t j = i; spring -> known_operational_locations[j] == '#' || spring -> known_operational_locations[j] == '.'; j++)
-                spring -> known_operational_locations[j] = j > spring -> known_operational_and_unknown_locations[spring -> number_of_known_operational_and_unknown_locations] - number_of_known_operational_locations_to_be_moved ? '#' : '.';
-                
-            return false;
+            for (size_t j = spring -> number_of_known_operational_and_unknown_locations; ; j--)
+            {
+                if (spring -> known_operational_and_unknown_locations[j] == spring -> known_operational_locations[i])
+                {
+                    memset(&current_permutation[j], '.', spring -> number_of_known_operational_and_unknown_locations - j);
+                    memset(&current_permutation[spring -> number_of_known_operational_and_unknown_locations - number_of_operational_locations_to_be_moved], '#', number_of_operational_locations_to_be_moved);
+
+                    //printf("Current Permutation: %s\n", current_permutation);
+                    return false;
+                }   
+            }
         }
-        
     }
 
     unsigned int number_of_contiguous_groups = 0;
@@ -581,7 +587,7 @@ int main(int argc, char** argv)
         // Repeat until reached last permutation
         while (memcmp(current_permutation, last_permutation, springs[i].number_of_unknown_locations) != 0)
         {
-            printf("Current Permutation: %s\n", current_permutation);
+            //printf("Current Permutation: %s\n", current_permutation);
 
             // Update data with current permutation
             for (int j = 0; j < springs[i].number_of_known_operational_and_unknown_locations; j++)
@@ -592,7 +598,7 @@ int main(int argc, char** argv)
             // Check if current permutation matches the groups
             if (validate_groups(&springs[i]))
             {
-                printf("Valid Group: %s\n", springs[i].row);
+                //printf("Valid Group: %s\n", springs[i].row);
                 springs[i].arrangements++;
             }
 
