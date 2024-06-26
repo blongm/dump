@@ -79,7 +79,7 @@ bool validate_groups(spring* spring)
                 }
             }
         
-            for (size_t j = spring -> number_of_known_operational_and_unknown_locations - 1; ; j--)
+            for (int j = 0; j < spring -> number_of_known_operational_and_unknown_locations; j++)
             {
                 if (spring -> known_operational_and_unknown_locations[j] == spring -> known_operational_locations[i])
                 {
@@ -95,16 +95,17 @@ bool validate_groups(spring* spring)
 
 
     unsigned int number_of_contiguous_groups = 0;
-    unsigned int* contiguous_groups = malloc(spring -> number_of_contiguous_groups * sizeof(unsigned int));
+    unsigned int* contiguous_groups = malloc(number_of_contiguous_groups * sizeof(unsigned int));
     
     // Calcualte grouping for this arrangement
-    for (size_t i = strspn((char*)spring -> row, "."); spring -> row[i] == '#' || spring -> row[i] == '.'; i++)
+    for (size_t i = 0; spring -> row[i] == '#' || spring -> row[i] == '.'; i++)
     {
         // Detected start of grouping
         if (spring -> row[i] == '#')
         {
             // Update list of groups
             number_of_contiguous_groups++;
+            contiguous_groups = realloc(contiguous_groups, number_of_contiguous_groups * sizeof(unsigned int));
 
             //  Update group
             contiguous_groups[number_of_contiguous_groups - 1] = strspn((char*)&spring -> row[i], "#");
@@ -119,6 +120,7 @@ bool validate_groups(spring* spring)
       // First check if amount of groups is good
     if (number_of_contiguous_groups != spring -> number_of_contiguous_groups)
     {
+        //printf("%d\n", contiguous_groups[0]);
         free(contiguous_groups);
 
         return false;
@@ -406,7 +408,7 @@ int main(int argc, char** argv)
         printf("Lines %d\n", i + 1);
 
         springs[i].length_of_row_unfolded = ((springs[i].length_of_row + 1) * 5) - 1;
-        springs[i].row_unfolded = malloc(springs[i].length_of_row_unfolded );
+        springs[i].row_unfolded = malloc(springs[i].length_of_row_unfolded + 1);
 
         // Resest Changed data back to '?'
         for (int j = 0; j < springs[i].number_of_unknown_locations; j++)
@@ -431,6 +433,9 @@ int main(int argc, char** argv)
         {
             springs[i].row_unfolded[j * springs[i].length_of_row + j - 1] = '?';
         }
+
+        // Add null to the end!!!
+        springs[i].row_unfolded[springs[i].length_of_row_unfolded] = '\0';
         
         springs[i].row = springs[i].row_unfolded;
         
@@ -602,20 +607,27 @@ int main(int argc, char** argv)
         
 
         
-        current_permutation = realloc(current_permutation, springs[i].number_of_unknown_locations + springs[i].number_of_known_operational_locations);
+        current_permutation = realloc(current_permutation, springs[i].number_of_unknown_locations + springs[i].number_of_known_operational_locations + 1);
         memset(current_permutation, '.', springs[i].number_of_unknown_locations + springs[i].number_of_known_operational_locations);
         memset(current_permutation, '#', springs[i].total_of_group_sizes);
 
-        last_permutation = realloc(last_permutation, springs[i].number_of_unknown_locations + springs[i].number_of_known_operational_locations);
+
+        
+        last_permutation = realloc(last_permutation, springs[i].number_of_unknown_locations + springs[i].number_of_known_operational_locations + 1);
         memset(last_permutation, '#', springs[i].number_of_unknown_locations + springs[i].number_of_known_operational_locations);
         memset(last_permutation, '.', springs[i].number_of_unknown_locations + springs[i].number_of_known_operational_locations - (springs[i].total_of_group_sizes));
+
+        // I LOVE NULL-TERMINATED STRINGS!
+        current_permutation[springs[i].number_of_unknown_locations + springs[i].number_of_known_operational_locations] = '\0';
+        last_permutation[springs[i].number_of_unknown_locations + springs[i].number_of_known_operational_locations] = '\0';
+
 
         printf("%s\n", springs[i].row_unfolded);
 
         // Repeat until reached last permutation
         while (memcmp(current_permutation, last_permutation, springs[i].number_of_unknown_locations) != 0)
         {
-            printf("Current Permutation: %s\n", current_permutation);
+            //printf("Current Permutation: %s\n", current_permutation);
 
             // Update data with current permutation
             for (int j = 0; j < springs[i].number_of_known_operational_and_unknown_locations; j++)
