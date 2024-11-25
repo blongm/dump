@@ -7,16 +7,27 @@ FILE* open(char* file_name)
     return fopen(file_name, "rb");
 }
 
-char* getl(file)
+void add_chr(char* arr, size_t* arr_size, char chr)
 {
-    char* line = malloc(0);
+    *arr_size = (*arr_size) + 1;
+    arr = realloc(arr, (*arr_size) * sizeof(char));
+    arr[(*arr_size) - 1] = chr;
+}
+
+char* getl(FILE* file)
+{
     size_t line_len = 0;
+    char* line = realloc(line, 0);
     char c;
 
-    while (c = fgetc(file) != '\n')
+    while ((c = fgetc(file)) != '\n')
     {
-        line = realloc()
+        add_chr(line, &line_len, c);
     }
+
+    add_chr(line, &line_len, '\0');
+
+    return line;
 }
 
 int main(int argc, char** argv)
@@ -24,7 +35,15 @@ int main(int argc, char** argv)
     if (argc < 1) return 1;
     FILE* file = open(argv[1]);
 
+    char* line;
 
+    while ((line = getl(file))[0] != '\0')
+    {
+        printf("%s", line);
+        free(line);
+    }
+
+    fclose(file);
 
     return 0;
 }
