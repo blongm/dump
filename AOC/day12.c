@@ -17,12 +17,17 @@ void add_chr(char* arr, size_t* arr_size, char chr)
 char* getl(FILE* file)
 {
     size_t line_len = 0;
-    char* line = realloc(line, 0);
+    char* line = malloc(0);
     char c;
 
     while ((c = fgetc(file)) != '\n')
     {
         add_chr(line, &line_len, c);
+
+        if (c == EOF)
+        {
+            return line;
+        }
     }
 
     add_chr(line, &line_len, '\0');
@@ -35,14 +40,16 @@ int main(int argc, char** argv)
     if (argc < 1) return 1;
     FILE* file = open(argv[1]);
 
-    char* line;
+    char* line = malloc(0);
 
-    while ((line = getl(file))[0] != '\0')
+    while ((line = getl(file))[0] != EOF)
     {
-        printf("%s", line);
+        printf("%s\n", line);
         free(line);
     }
 
+    printf("%s\n", line);
+    free(line);
     fclose(file);
 
     return 0;
