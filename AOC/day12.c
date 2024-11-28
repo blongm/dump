@@ -20,7 +20,7 @@ char* getl(FILE* file)
     char* line = malloc(0);
     char c;
 
-    while ((c = fgetc(file)) != '\n')
+    while ((c = fgetc(file)) != '\n' && !feof(file))
     {
         add_chr(line, &line_len, c);
 
@@ -42,14 +42,13 @@ int main(int argc, char** argv)
 
     char* line = malloc(0);
 
-    while ((line = getl(file))[0] != EOF)
+    while (!feof(file))
     {
+        line = getl(file);
         printf("%s\n", line);
         free(line);
     }
 
-    printf("%s\n", line);
-    free(line);
     fclose(file);
 
     return 0;
