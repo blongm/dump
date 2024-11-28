@@ -1,12 +1,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-// Load file
+// Load file.
 FILE* open(char* file_name)
 {
     return fopen(file_name, "rb");
 }
 
+// Add char to array.
 void add_chr(char* arr, size_t* arr_size, char chr)
 {
     *arr_size = (*arr_size) + 1;
@@ -14,6 +15,8 @@ void add_chr(char* arr, size_t* arr_size, char chr)
     arr[(*arr_size) - 1] = chr;
 }
 
+// Get line from file.
+// Returns pointer to line.
 char* getl(FILE* file)
 {
     size_t line_len = 0;
@@ -34,6 +37,7 @@ char* getl(FILE* file)
 
     return line;
 }
+
 
 int main(int argc, char** argv)
 {
